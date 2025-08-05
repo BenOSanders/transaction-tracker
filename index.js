@@ -20,10 +20,9 @@ const client = new PlaidApi(configuration);
 // todo: store, encrypted, in database
 let access_token = null;
 
-// Create link token
+// Create link token - manual for now
+// Using hosted link in the future
 
-// Exchange public token for access token
-
-// Pull transaction data
+// Get transactions
 
 
