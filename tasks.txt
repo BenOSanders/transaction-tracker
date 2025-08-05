@@ -1,0 +1,9 @@
+[] write api calls to Plaid
+	[] .env
+	[] link token
+	[] request transactions
+	[] remove duplicates
+[] write code to insert dedupe transactions into spreadsheet/csv
+[] make spreadsheet to store transactions
+[] consider database, sqlite
+[] make dashboard to view spreadsheet data
