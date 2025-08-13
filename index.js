@@ -1,9 +1,13 @@
-require('dotenv').config();
-const express = require('express');
+//require('dotenv').config();
+import dotenv from 'dotenv';
+//const express = require('express');
+import express from 'express';
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid';
 import dayjs from 'dayjs';
 import {createObjectCsvWriter } from 'csv-writer';
 import fs from 'fs';
+
+dotenv.config();
 
 const app = express();
 app.use(express.json());
@@ -25,16 +29,17 @@ const access_token = process.env.PLAID_ACCESS_TOKEN;
 // Get transactions
 async function getTransactions() {
 	try {
-		const startDate = daysjs().subtract(30, 'day').format('YYYY-MM-DD');
-		const endDate = daysjs().format('YYYY-MM-DD');
+		const startDate = dayjs().subtract(30, 'day').format('YYYY-MM-DD');
+		const endDate = dayjs().format('YYYY-MM-DD');
 
 		const response = await client.transactionsGet({
-			access_token: ACCESS_TOKEN,
+			access_token: access_token,
       			start_date: startDate,
       			end_date: endDate,
       			options: {
         			count: 100, // max per page
         			offset: 0,
+				},
 		});
 
 		const transactions = response.data.transactions;
@@ -55,7 +60,7 @@ async function saveToCSV(transactions) {
 			merchent name, merchent entity id, website.
 	*/
 	const csvWriter = createObjectCsvWriter({
-		path: 'transactions.csv',
+		path: process.env.CSV_PATH,
 		header: [
 			{ id: 'transaction_id', title: 'Transaction ID' },
 			{ id: 'date', title: 'Date' },
@@ -70,7 +75,7 @@ async function saveToCSV(transactions) {
 			{ id: 'payment_channel', title: 'Payment Channel' },
 			{ id: 'category', title: 'Category' },
 			{ id: 'category_confidence', title: 'Category Confidence' },
-			{ id: '', title: 'Account ID' },
+			{ id: 'account_id', title: 'Account ID' },
 		],
 	});
 
@@ -79,15 +84,20 @@ async function saveToCSV(transactions) {
 		transaction_id: tx.transaction_id,
 		date: tx.date,
 		datetime: tx.datetime,
-		authorization_date: tx.date,
+		authorization_date: tx.authorization_date,
+		authorization_datetime: tx.authorization_datetime,
 		name: tx.name,
 		amount: tx.amount,
-		category: tx.category?.join(', ') || '',
+		merchent_name: tx.merchent_name,
+		merchent_entity_id: tx.merchent_entity_id,
+		website: tx.website,
+		category: tx.category,
+		category_confidence: tx.category_confidence,
 		account_id: tx.account_id,
 		}))
 	);
 
-	console.log('Transactions saved to transactions.csv');
+	console.log(`Transactions saved to ${process.env.CSV_PATH}`);
 }
 
 getTransactions();
