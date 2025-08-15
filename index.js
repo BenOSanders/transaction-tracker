@@ -1,14 +1,10 @@
-//require('dotenv').config();
 import dotenv from 'dotenv';
-//const express = require('express');
 import express from 'express';
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid';
 import dayjs from 'dayjs';
 import {createObjectCsvWriter } from 'csv-writer';
-import fs from 'fs';
 
 dotenv.config();
-
 const app = express();
 app.use(express.json());
 
@@ -26,7 +22,7 @@ const client = new PlaidApi(configuration);
 
 const access_token = process.env.PLAID_ACCESS_TOKEN;
 
-// Get transactions
+// Get transactions for the last 30 days
 async function getTransactions() {
 	try {
 		const startDate = dayjs().subtract(30, 'day').format('YYYY-MM-DD');
@@ -34,19 +30,21 @@ async function getTransactions() {
 
 		const response = await client.transactionsGet({
 			access_token: access_token,
-      			start_date: startDate,
-      			end_date: endDate,
-      			options: {
-        			count: 100, // max per page
-        			offset: 0,
-				},
+			start_date: startDate,
+			end_date: endDate,
+			options: {
+				count: 100, // max per page
+				offset: 0,
+			},
 		});
 
 		const transactions = response.data.transactions;
 		
 		console.log(`Fetched ${transactions.length} transactions`);
 
+		// Move outside function
 		await saveToCSV(transactions);
+
 	} catch (error) {
 		console.error('Error fetching transactions:', error.response?.data || error.message);
 	}
@@ -99,5 +97,6 @@ async function saveToCSV(transactions) {
 
 	console.log(`Transactions saved to ${process.env.CSV_PATH}`);
 }
+
 
 getTransactions();
