@@ -4,11 +4,11 @@ const db = Database('bank.db')
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS transactions(
-    id TEXT PRIMARY KEY,
-    account_id TEXT,
+    account_id TEXT PRIMARY KEY,
+    transactions_id TEXT,
     name TEXT,
     amount REAL,
-    date TEXT,
+    date DATE,
     category TEXT,
     category_confidence TEXT,
     user_category TEXT,
@@ -24,12 +24,12 @@ CREATE TABLE IF NOT EXISTS transactions(
 );
 
 CREATE TABLE IF NOT EXISTS sync_state(
-    id INTEGER PRIMARY KEY CHECK (id = 1),
+    account_id INTEGER PRIMARY KEY CHECK (id = 1),
     cursor TEXT
 );
-    
+
 CREATE TABLE IF NOT EXISTS balance(
-    id INTEGER PRIMARY KEY CHECK (id = 1),
+    account_id INTEGER PRIMARY KEY CHECK (id = 1),
     balance REAL
 );
 

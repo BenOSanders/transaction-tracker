@@ -2,13 +2,23 @@ const { db } = require('../config/db');
 
 // DB prepared statements
 const insertTx = db.prepare(`
-  INSERT OR REPLACE INTO transactions (id, account_id, name, amount, date, category, category_confidence, user_category, payment_channel, merchent_name, merchent_entity_id, website, merchent_logo, address, city, state, zipcode)
-  VALUES (@transaction_id, @account_id, @name, @amount, @date, @category, @category_confidence, @user_category, @payment_channel, @merchent_name, @merchent_entity_id, @website, @merchent_logo, @address, @city, @state, @zipcode)
+  INSERT OR REPLACE INTO transactions (account_id, transaction_id, name, amount, date, category, category_confidence, user_category, payment_channel, merchent_name, merchent_entity_id, website, merchent_logo, address, city, state, zipcode)
+  VALUES (@account_id, @transaction_id, @name, @amount, @date, @category, @category_confidence, @user_category, @payment_channel, @merchent_name, @merchent_entity_id, @website, @merchent_logo, @address, @city, @state, @zipcode)
 `);
 
-const getCursor = db.prepare("SELECT cursor FROM sync_state WHERE id = 1");
-const setCursor = db.prepare("UPDATE sync_state SET cursor = ? WHERE id = 1");
+/**
+ * Gets cursor before making request
+ * 
+ * @param {integer} account_id ID of account to retrieve cursor for
+ */
+let getCursor = (account_id) => { db.prepare(`SELECT cursor FROM sync_state WHERE account_id = ${account_id}`)};
 
+/**
+ * Sets cursor after retrieving data
+ * 
+ * @param {*} account_id ID of account to set cursor for
+ */
+let setCursor = (account_id) => { db.prepare(`UPDATE sync_state SET cursor = ? WHERE id = ${account_id}`)};
 
 /**
  * Receives list of transacitons to add to the databse. Returns number of transactions added
@@ -21,23 +31,23 @@ function saveTransactions(transactions) {
 
     transactions.data.forEach(tx => {
         insertTx.run({
-            transaction_id: tx.transaction_id,
             account_id: tx.account_id,
+            transaction_id: tx.transaction_id,
             name: tx.name,
             amount: tx.amount,
             date: tx.date,
-            category: tx.category, //potentially nested further
-            category_confidence: tx.category_confidence,
+            category: tx.personal_finance_category.primary,
+            category_confidence: tx.personal_finance_category.confidence_level,
             user_category: "",
             payment_channel: tx.payment_channel,
             merchent_name: tx.merchent_name,
             merchent_entity_id: tx.merchent_entity_id,
             website: tx.website,
-            merchent_logo: tx.merchent_logo,
-            address: tx.address,
-            city: tx.city,
-            state: tx.state,
-            logo: tx.logo
+            merchent_logo: tx.logo_url,
+            address: tx.location.address,
+            city: tx.location.city,
+            state: tx.location.state,
+            zipcode: tx.location.postal_code
         });
         added++;
     });
