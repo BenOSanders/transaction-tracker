@@ -1,11 +1,5 @@
 const { db } = require('../config/db');
 
-// DB prepared statements
-const insertTx = db.prepare(`
-  INSERT OR REPLACE INTO transactions (account_id, transaction_id, name, amount, date, category, category_confidence, user_category, payment_channel, merchent_name, merchent_entity_id, website, merchent_logo, address, city, state, zipcode)
-  VALUES (@account_id, @transaction_id, @name, @amount, @date, @category, @category_confidence, @user_category, @payment_channel, @merchent_name, @merchent_entity_id, @website, @merchent_logo, @address, @city, @state, @zipcode)
-`);
-
 /**
  * Gets cursor before making request
  * 
@@ -19,6 +13,41 @@ let getCursor = (account_id) => { db.prepare(`SELECT cursor FROM sync_state WHER
  * @param {*} account_id ID of account to set cursor for
  */
 let setCursor = (account_id) => { db.prepare(`UPDATE sync_state SET cursor = ? WHERE id = ${account_id}`)};
+
+// Initial 
+//const getCursor = db.prepare("SELECT cursor FROM sync_state WHERE id = 1");
+//const setCursor = db.prepare("UPDATE sync_state SET cursor = ? WHERE id = 1");
+
+// DB prepared statements
+const insertTx = db.prepare(`
+  INSERT OR REPLACE INTO transactions (account_id, transaction_id, name, amount, date, category, category_confidence, user_category, payment_channel, merchent_name, merchent_entity_id, website, merchent_logo, address, city, state, zipcode)
+  VALUES (@account_id, @transaction_id, @name, @amount, @date, @category, @category_confidence, @user_category, @payment_channel, @merchent_name, @merchent_entity_id, @website, @merchent_logo, @address, @city, @state, @zipcode)
+`);
+
+const removeTx = db.prepare(`DELETE FROM transactions WHERE transaction_id = @transaction_id`);
+
+const upsertTx = db.prepare(`
+    INSERT OR REPLACE INTO transactions (account_id, transaction_id, name, amount, date, category, category_confidence, user_category, payment_channel, merchent_name, merchent_entity_id, website, merchent_logo, address, city, state, zipcode)
+    VALUES (@account_id, @transaction_id, @name, @amount, @date, @category, @category_confidence, @user_category, @payment_channel, @merchent_name, @merchent_entity_id, @website, @merchent_logo, @address, @city, @state, @zipcode)
+    ON CONFLICT(transaction_id) DO UPDATE SET
+        account_id = excluded.account_id,
+        transaction_id = exclude.transaction_id,
+        name = exclude.name,
+        amount = exclude.amount,
+        date = exclude.date,
+        category = exclude.category
+        category_confidence = exclude.category_confidence,
+        user_category = exclude.user_category,
+        payment_channel = exclude.payment_channel,
+        merchent_name = exclude.merchent_name,
+        merchent_entity_id = exclude.merchent_entity_id,
+        website = exclude.website,
+        merchent_logo = exclude.merchent_logo,
+        address = exclude.address,
+        city = exclude.city,
+        state = exclude.state,
+        zipcode = exclude.zipcode
+`);
 
 /**
  * Receives list of transacitons to add to the databse. Returns number of transactions added
