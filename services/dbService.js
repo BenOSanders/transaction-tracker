@@ -11,16 +11,20 @@ export const getCursor = (account_id) => {
     return prepCursor.run({account_id});
 };
 
-
-const prepSetCursor = db.prepare(`UPDATE sync_state SET cursor = @new_cursor WHERE account_id = @account_id`);
+//const prepSetCursor = db.prepare(`UPDATE sync_state SET cursor = @new_cursor WHERE account_id = @account_id`);
+const upsertCursor = db.prepare(`INSERT OR REPLACE INTO sync_state (account_id, cursor)
+    VALUES (@account_id, @cursor)
+    ON CONFLICT(account_id) DO UPDATE SET
+        cursor = excluded.cursor
+`);
 
 /**
  * Sets cursor after retrieving data
  * 
  * @param {*} account_id ID of account to set cursor for
  */
-export const setCursor = (new_cursor, account_id) => { 
-    prepSetCursor.run({new_cursor, account_id});
+export const setCursor = (account_id, cursor) => { 
+    upsertCursor.run({account_id, cursor});
 };
 
 // Initial 
