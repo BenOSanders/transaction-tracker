@@ -1,18 +1,27 @@
-const { db } = require('../config/db');
+import { db } from '../config/db.js';
+
+const prepCursor = db.prepare(`SELECT cursor FROM sync_state WHERE account_id = @account_id`);
 
 /**
  * Gets cursor before making request
  * 
  * @param {integer} account_id ID of account to retrieve cursor for
  */
-let getCursor = (account_id) => { db.prepare(`SELECT cursor FROM sync_state WHERE account_id = ${account_id}`)};
+export const getCursor = (account_id) => {
+    return prepCursor.run({account_id});
+};
+
+
+const prepSetCursor = db.prepare(`UPDATE sync_state SET cursor = @new_cursor WHERE account_id = @account_id`);
 
 /**
  * Sets cursor after retrieving data
  * 
  * @param {*} account_id ID of account to set cursor for
  */
-let setCursor = (account_id) => { db.prepare(`UPDATE sync_state SET cursor = ? WHERE id = ${account_id}`)};
+export const setCursor = (new_cursor, account_id) => { 
+    prepSetCursor(new_cursor, account_id);
+};
 
 // Initial 
 //const getCursor = db.prepare("SELECT cursor FROM sync_state WHERE id = 1");
@@ -30,23 +39,21 @@ const upsertTx = db.prepare(`
     INSERT OR REPLACE INTO transactions (account_id, transaction_id, name, amount, date, category, category_confidence, user_category, payment_channel, merchent_name, merchent_entity_id, website, merchent_logo, address, city, state, zipcode)
     VALUES (@account_id, @transaction_id, @name, @amount, @date, @category, @category_confidence, @user_category, @payment_channel, @merchent_name, @merchent_entity_id, @website, @merchent_logo, @address, @city, @state, @zipcode)
     ON CONFLICT(transaction_id) DO UPDATE SET
-        account_id = excluded.account_id,
-        transaction_id = exclude.transaction_id,
-        name = exclude.name,
-        amount = exclude.amount,
-        date = exclude.date,
-        category = exclude.category
-        category_confidence = exclude.category_confidence,
-        user_category = exclude.user_category,
-        payment_channel = exclude.payment_channel,
-        merchent_name = exclude.merchent_name,
-        merchent_entity_id = exclude.merchent_entity_id,
-        website = exclude.website,
-        merchent_logo = exclude.merchent_logo,
-        address = exclude.address,
-        city = exclude.city,
-        state = exclude.state,
-        zipcode = exclude.zipcode
+        name = excluded.name,
+        amount = excluded.amount,
+        date = excluded.date,
+        category = excluded.category,
+        category_confidence = excluded.category_confidence,
+        user_category = excluded.user_category,
+        payment_channel = excluded.payment_channel,
+        merchent_name = excluded.merchent_name,
+        merchent_entity_id = excluded.merchent_entity_id,
+        website = excluded.website,
+        merchent_logo = excluded.merchent_logo,
+        address = excluded.address,
+        city = excluded.city,
+        state = excluded.state,
+        zipcode = excluded.zipcode
 `);
 
 /**
@@ -55,7 +62,7 @@ const upsertTx = db.prepare(`
  * @param {JSON} transactions Transaction to be added or modified
  * @returns {integer} Number of transactions added
  */
-function saveTransactions(transactions) {
+export function saveTransactions(transactions) {
     let upserted = 0;
 
     if(Object.keys(transactions).length === 0) {
@@ -90,7 +97,7 @@ function saveTransactions(transactions) {
     return upserted;
 };
 
-function removeTransactions(transactions) {
+export function removeTransactions(transactions) {
     const deleted = 0;
 
     if(Object.keys(transactions).length === 0) {
@@ -109,4 +116,4 @@ function removeTransactions(transactions) {
     return deleted;
 }
 
-module.export = { saveTransactions, removeTransactions, getCursor, setCursor };
+//module.export = { saveTransactions, removeTransactions, getCursor, setCursor };

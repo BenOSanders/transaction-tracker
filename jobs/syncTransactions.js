@@ -1,12 +1,12 @@
 // Retrieves data from Plaid API functions and loads it into database
-const { getTransactions } = require('../services/plaidService');
-const { saveTransactions, removeTransactions, modifyTransactions } = require('../services/dbService');
+import { getTransactions } from '../services/plaidService.js';
+import { saveTransactions, removeTransactions } from '../services/dbService.js';
 
-let syncTransactions = () => {
-    let newTx = getTransactions();
+export async function syncTransactions () {
+    let newTx = await getTransactions();
     saveTransactions(newTx[0]);
     saveTransactions(newtx[1]);
     removeTransactions(newTx[2]);
 };
 
-module.exports = { syncTransactions };
+//module.exports = { syncTransactions };
