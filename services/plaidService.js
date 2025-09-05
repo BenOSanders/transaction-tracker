@@ -16,6 +16,7 @@ let response;
 
 // Get cursor from DB
 let current_cursor = getCursor(env.plaid.PLAID_ACCOUNT_ID);
+if(current_cursor != null) {current_cursor = null};
 
 /**
  * Must retrieve transactions and return them as json, and update cursor
@@ -30,6 +31,8 @@ export async function getTransactions () {
 	let modified = [];
 	let removed = [];
 
+	let data;
+
 	while(hasMore) {
 		const request = {
 			client_id: env.plaid.PLAID_CLIENT_ID, // Already exists in config
@@ -39,7 +42,7 @@ export async function getTransactions () {
 		}
 
 		const response = await client.transactionsSync(request);
-		const data = response.data;
+		data = response.data;
 		
 		added = added.concat(data.added);
 		modified = modified.concat(data.modified);
@@ -52,7 +55,7 @@ export async function getTransactions () {
 	}
 
 	// Save new cursor to DB
-	setCursor.run(current_cursor, data.account_id);
+	setCursor(current_cursor, data.account_id);
 
 	return [added, modified, removed];
 };

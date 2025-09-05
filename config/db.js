@@ -36,6 +36,6 @@ CREATE TABLE IF NOT EXISTS balance(
 `);
 
 
-db.prepare("INSERT OR IGNORE INTO sync_state (account_id, cursor) VALUES (1, NULL)").run();
+db.prepare("INSERT OR IGNORE INTO sync_state (account_id, cursor) VALUES (NULL, NULL)").run();
 
 //export default db;

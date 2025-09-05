@@ -5,7 +5,7 @@ import { saveTransactions, removeTransactions } from '../services/dbService.js';
 export async function syncTransactions () {
     let newTx = await getTransactions();
     saveTransactions(newTx[0]);
-    saveTransactions(newtx[1]);
+    saveTransactions(newTx[1]);
     removeTransactions(newTx[2]);
 };
 

@@ -20,7 +20,7 @@ const prepSetCursor = db.prepare(`UPDATE sync_state SET cursor = @new_cursor WHE
  * @param {*} account_id ID of account to set cursor for
  */
 export const setCursor = (new_cursor, account_id) => { 
-    prepSetCursor(new_cursor, account_id);
+    prepSetCursor.run({new_cursor, account_id});
 };
 
 // Initial 
@@ -69,7 +69,7 @@ export function saveTransactions(transactions) {
         return 0
     };
 
-    transactions.data.forEach(tx => {
+    transactions.forEach(tx => {
         insertTx.run({
             account_id: tx.account_id,
             transaction_id: tx.transaction_id,
