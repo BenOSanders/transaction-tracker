@@ -50,13 +50,17 @@ const upsertTx = db.prepare(`
 `);
 
 /**
- * Receives list of transacitons to add to the databse. Returns number of transactions added
+ * Receives list of transacitons to add to or modify in the databse. Returns number of transactions added or modified.
  * 
- * @param {JSON} transactions 
+ * @param {JSON} transactions Transaction to be added or modified
  * @returns {integer} Number of transactions added
  */
 function saveTransactions(transactions) {
-    let added = 0;
+    let upserted = 0;
+
+    if(Object.keys(transactions).length === 0) {
+        return 0
+    };
 
     transactions.data.forEach(tx => {
         insertTx.run({
@@ -78,20 +82,31 @@ function saveTransactions(transactions) {
             state: tx.location.state,
             zipcode: tx.location.postal_code
         });
-        added++;
+        upserted++;
     });
 
-    console.log(`Successfully added ${added} transactions`)
+    console.log(`Successfully upserted ${upserted} transactions`);
 
-    return added;
+    return upserted;
 };
 
-function removeTransactions() {
+function removeTransactions(transactions) {
+    const deleted = 0;
 
+    if(Object.keys(transactions).length === 0) {
+        return 0
+    };
+
+    transactions.data.forEach(tx => {
+        removeTx.run({
+            transaction_id: tx.transaction_id
+        });
+        deleted++;
+    });
+
+    console.log(`Successfully deleted ${deleted} transactions`);
+
+    return deleted;
 }
 
-function updateTransactions() {
-    
-}
-
-module.export = { saveTransactions, getCursor, setCursor };
+module.export = { saveTransactions, removeTransactions, getCursor, setCursor };

@@ -59,7 +59,7 @@ function getTransactions() {
 	// Save new cursor to DB
 	setCursor.run(cursor);
 
-	return {added, modified, removed};
+	return [added, modified, removed];
 };
 
 module.export = { getTransactions };

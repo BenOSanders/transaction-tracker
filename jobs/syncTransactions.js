@@ -5,8 +5,8 @@ const { saveTransactions, removeTransactions, modifyTransactions } = require('..
 let syncTransactions = () => {
     let newTx = getTransactions();
     saveTransactions(newTx[0]);
-    // modifyTransactions(newtx[1]);
-    // removeTransactions(newTx[2]);
+    saveTransactions(newtx[1]);
+    removeTransactions(newTx[2]);
 };
 
 module.exports = { syncTransactions };
