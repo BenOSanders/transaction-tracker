@@ -4,8 +4,8 @@ export const db = Database('bank.db');
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS transactions(
-    account_id TEXT PRIMARY KEY,
-    transaction_id TEXT UNIQUE,
+    account_id TEXT,
+    transaction_id TEXT PRIMARY KEY,
     name TEXT,
     amount REAL,
     date DATE,

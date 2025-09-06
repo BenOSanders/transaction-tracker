@@ -43,7 +43,7 @@ export async function getTransactions () {
 
 		const response = await client.transactionsSync(request);
 		data = response.data;
-		
+
 		added = added.concat(data.added);
 		modified = modified.concat(data.modified);
 		removed = removed.concat(data.removed);
@@ -53,7 +53,7 @@ export async function getTransactions () {
 		current_cursor = data.next_cursor;
 		hasMore = data.has_more;
 	}
-	console.log(data.accounts[0].account_id);
+
 	// Save new cursor to DB
 	setCursor(data.accounts[0].account_id, current_cursor);
 
