@@ -20,17 +20,25 @@ CREATE TABLE IF NOT EXISTS transactions(
     address TEXT,
     city TEXT,
     state TEXT,
-    zipcode REAL
+    zipcode REAL,
+    FOREIGN KEY (account_id) REFERENCES accounts(account_id)
 );
 
 CREATE TABLE IF NOT EXISTS sync_state(
     account_id TEXT PRIMARY KEY,
-    cursor TEXT
+    cursor TEXT,
+    FOREIGN KEY (account_id) REFERENCES accounts(account_id)
 );
 
 CREATE TABLE IF NOT EXISTS balance(
     account_id TEXT PRIMARY KEY,
-    balance REAL
+    balance REAL,
+    FOREIGN KEY (account_id) REFERENCES accounts(account_id)
+);
+
+CREATE TABLE IF NOT EXISTS accounts(
+    account_id TEXT PRIMARY KEY,
+    name
 );
 
 `);

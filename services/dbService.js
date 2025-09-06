@@ -27,10 +27,6 @@ export const setCursor = (account_id, cursor) => {
     upsertCursor.run({account_id, cursor});
 };
 
-// Initial 
-//const getCursor = db.prepare("SELECT cursor FROM sync_state WHERE id = 1");
-//const setCursor = db.prepare("UPDATE sync_state SET cursor = ? WHERE id = 1");
-
 // DB prepared statements
 const insertTx = db.prepare(`
   INSERT OR REPLACE INTO transactions (account_id, transaction_id, name, amount, date, category, category_confidence, user_category, payment_channel, merchent_name, merchent_entity_id, website, merchent_logo, address, city, state, zipcode)
