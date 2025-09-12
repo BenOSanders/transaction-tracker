@@ -44,6 +44,5 @@ CREATE TABLE IF NOT EXISTS accounts(
 `);
 
 
-db.prepare("INSERT OR IGNORE INTO sync_state (account_id, cursor) VALUES (NULL, NULL)").run();
+//db.prepare("INSERT OR IGNORE INTO sync_state (account_id, cursor) VALUES (NULL, NULL)").run();
 
-//export default db;

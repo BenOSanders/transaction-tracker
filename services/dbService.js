@@ -57,6 +57,16 @@ const upsertTx = db.prepare(`
 `);
 
 /**
+ * Prepare statemenet to upsert balance
+ */
+const upsertBalance = db.prepare(`
+    INSERT OR REPLACE INTO balance (account_id, balance)
+    VALUES (@account_id, @balance)
+    ON CONFLICT(account_id) DO UPDATE SET
+        balance = excluded.balance
+    `);
+
+/**
  * Receives list of transacitons to add to or modify in the databse. Returns number of transactions added or modified.
  * 
  * @param {JSON} transactions Transaction to be added or modified
@@ -116,4 +126,14 @@ export function removeTransactions(transactions) {
     return deleted;
 }
 
-//module.export = { saveTransactions, removeTransactions, getCursor, setCursor };
+export function updateBalance(account_id, balance) {
+    if(balance == NULL) {
+        console.log(`Failed to update account balance`);
+        return 0;
+    }
+    upsertBalance(account_id, balance);
+
+    console.log(`Successfully updated account balance`);
+    
+    return 0;
+};

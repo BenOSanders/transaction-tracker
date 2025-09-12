@@ -30,6 +30,7 @@ export async function getTransactions () {
 	let added = [];
 	let modified = [];
 	let removed = [];
+	let balance;
 
 	let data;
 
@@ -47,7 +48,7 @@ export async function getTransactions () {
 		added = added.concat(data.added);
 		modified = modified.concat(data.modified);
 		removed = removed.concat(data.removed);
-
+		balance = data.balance;
 		// TODO: Add in an update to "balance". Make sure balance has changed, so you don't repeat if not necessary. 
 		
 		current_cursor = data.next_cursor;
@@ -57,7 +58,6 @@ export async function getTransactions () {
 	// Save new cursor to DB
 	setCursor(data.accounts[0].account_id, current_cursor);
 
-	return [added, modified, removed];
+	return [added, modified, removed, balance];
 };
 
-//module.export = { getTransactions };
