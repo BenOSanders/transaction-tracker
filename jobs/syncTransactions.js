@@ -4,10 +4,14 @@ import { saveTransactions, removeTransactions, updateBalance } from '../services
 
 export async function syncTransactions () {
     let newTx = await getTransactions();
+
+    // Init account DB entry
+
+
     saveTransactions(newTx[0]);
     saveTransactions(newTx[1]);
     removeTransactions(newTx[2]);
-    updateBalance(newTx[3]);
+    updateBalance(newTx[3].account_id, newTx[3].balance);
 };
 
 //module.exports = { syncTransactions };

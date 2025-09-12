@@ -1,6 +1,6 @@
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid';
 import env from '../config/env.js';
-import { getCursor, setCursor } from './dbService.js';
+import { getCursor, setCursor, addAccount } from './dbService.js';
 
 // Set up Plaid API configuration
 const configuration = new Configuration({
@@ -30,9 +30,11 @@ export async function getTransactions () {
 	let added = [];
 	let modified = [];
 	let removed = [];
-	let balance;
 
 	let data;
+	let account_id;
+	let balance;
+	let balanceJSON;
 
 	while(hasMore) {
 		const request = {
@@ -44,20 +46,26 @@ export async function getTransactions () {
 
 		const response = await client.transactionsSync(request);
 		data = response.data;
+		account_id = data.accounts[0].account_id;
 
 		added = added.concat(data.added);
 		modified = modified.concat(data.modified);
 		removed = removed.concat(data.removed);
-		balance = data.balance;
+
+		balance = data.accounts[0].balances.available;
+		balanceJSON = {account_id, balance};
 		// TODO: Add in an update to "balance". Make sure balance has changed, so you don't repeat if not necessary. 
 		
 		current_cursor = data.next_cursor;
 		hasMore = data.has_more;
 	}
 
-	// Save new cursor to DB
-	setCursor(data.accounts[0].account_id, current_cursor);
+	//Ensure account exists
+	addAccount(account_id);
 
-	return [added, modified, removed, balance];
+	// Save new cursor to DB
+	setCursor(account_id, current_cursor);
+
+	return [added, modified, removed, balanceJSON];
 };
 

@@ -1,5 +1,8 @@
 import { db } from '../config/db.js';
 
+/**
+ * Cursor retrieval prepare statement
+ */
 const prepCursor = db.prepare(`SELECT cursor FROM sync_state WHERE account_id = @account_id`);
 
 /**
@@ -11,7 +14,9 @@ export const getCursor = (account_id) => {
     return prepCursor.run({account_id});
 };
 
-//const prepSetCursor = db.prepare(`UPDATE sync_state SET cursor = @new_cursor WHERE account_id = @account_id`);
+/**
+ * Update or insert cursor prepare statement
+ */
 const upsertCursor = db.prepare(`INSERT OR REPLACE INTO sync_state (account_id, cursor)
     VALUES (@account_id, @cursor)
     ON CONFLICT(account_id) DO UPDATE SET
@@ -27,7 +32,17 @@ export const setCursor = (account_id, cursor) => {
     upsertCursor.run({account_id, cursor});
 };
 
-// DB prepared statements
+
+const insertAccount = db.prepare(`
+    INSERT OR REPLACE INTO accounts (account_id)
+    VALUES (@account_id)
+`);
+
+export const addAccount = (account_id) => {
+    insertAccount.run({account_id});
+};
+
+
 const insertTx = db.prepare(`
   INSERT OR REPLACE INTO transactions (account_id, transaction_id, name, amount, date, category, category_confidence, user_category, payment_channel, merchent_name, merchent_entity_id, website, merchent_logo, address, city, state, zipcode)
   VALUES (@account_id, @transaction_id, @name, @amount, @date, @category, @category_confidence, @user_category, @payment_channel, @merchent_name, @merchent_entity_id, @website, @merchent_logo, @address, @city, @state, @zipcode)
@@ -80,7 +95,7 @@ export function saveTransactions(transactions) {
     };
 
     transactions.forEach(tx => {
-        insertTx.run({
+        upsertTx.run({
             account_id: tx.account_id,
             transaction_id: tx.transaction_id,
             name: tx.name,
@@ -127,11 +142,11 @@ export function removeTransactions(transactions) {
 }
 
 export function updateBalance(account_id, balance) {
-    if(balance == NULL) {
+    if(balance == null) {
         console.log(`Failed to update account balance`);
         return 0;
     }
-    upsertBalance(account_id, balance);
+    upsertBalance.run({account_id, balance});
 
     console.log(`Successfully updated account balance`);
     
