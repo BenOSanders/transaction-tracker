@@ -13,14 +13,14 @@ CREATE TABLE IF NOT EXISTS transactions(
     category_confidence TEXT,
     user_category TEXT,
     payment_channel TEXT,
-    merchent_name TEXT,
-    merchent_entity_id TEXT,
+    merchant_name TEXT,
+    merchant_entity_id TEXT,
     website TEXT,
-    merchent_logo TEXT,
+    merchant_logo TEXT,
     address TEXT,
     city TEXT,
     state TEXT,
-    zipcode REAL,
+    zipcode TEXT,
     FOREIGN KEY (account_id) REFERENCES accounts(account_id)
 );
 
@@ -38,7 +38,8 @@ CREATE TABLE IF NOT EXISTS balance(
 
 CREATE TABLE IF NOT EXISTS accounts(
     account_id TEXT PRIMARY KEY,
-    name
+    name TEXT,
+    access_token TEXT
 );
 
 `);

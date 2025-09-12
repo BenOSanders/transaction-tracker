@@ -21,6 +21,7 @@ if(current_cursor != null) {current_cursor = null};
 /**
  * Must retrieve transactions and return them as json, and update cursor
  * 
+ * @param {string} TODO: include access token as a passed in value to support multiple accounts.
  * @returns {array} array with three JSON objects: added, modified and removed
  */
 export async function getTransactions () {
