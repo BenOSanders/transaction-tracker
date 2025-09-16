@@ -188,6 +188,8 @@ const insertItem = db.prepare(`
     VALUES (@item_id, @access_token, @institution_name);
 `);
 
+// TODO: Add functionality to add items.
+
 
 //======================================================================
 //=================================MISC=================================
