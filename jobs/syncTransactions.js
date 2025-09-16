@@ -1,17 +1,21 @@
 // Retrieves data from Plaid API functions and loads it into database
 import { getTransactions } from '../services/plaidService.js';
-import { saveTransactions, removeTransactions, updateBalance } from '../services/dbService.js';
+import { saveTransactions, removeTransactions, updateBalance, getAllItems } from '../services/dbService.js';
 
 export async function syncTransactions () {
-    let newTx = await getTransactions();
+    let items = getAllItems();
 
-    // Init account DB entry
+    items.forEach(async item => {
+        let newTx = await getTransactions(item.item_id);
 
-
-    saveTransactions(newTx[0]);
-    saveTransactions(newTx[1]);
-    removeTransactions(newTx[2]);
-    updateBalance(newTx[3].account_id, newTx[3].balance);
+        if(newTx.length != 0) {
+            saveTransactions(newTx[0]);
+            saveTransactions(newTx[1]);
+            removeTransactions(newTx[2]);
+            updateBalance(newTx[3].account_id, newTx[3].balance);    
+        };
+    });
+    
 };
 
 //module.exports = { syncTransactions };

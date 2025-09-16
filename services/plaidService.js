@@ -1,6 +1,6 @@
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid';
 import env from '../config/env.js';
-import { getCursor, setCursor, addAccount } from './dbService.js';
+import { getCursor, setCursor, addAccount, getAccessToken } from './dbService.js';
 
 // Set up Plaid API configuration
 const configuration = new Configuration({
@@ -11,20 +11,17 @@ const configuration = new Configuration({
 // Instantiate Plaid API client
 const client = new PlaidApi(configuration);
 
-// JSON object to be built with pages of 
-let response;
 
 // Get cursor from DB
 let current_cursor = getCursor(env.plaid.PLAID_ACCOUNT_ID);
-if(current_cursor != null) {current_cursor = null};
 
 /**
  * Must retrieve transactions and return them as json, and update cursor
  * 
  * @param {string} TODO: include access token as a passed in value to support multiple accounts.
- * @returns {array} array with three JSON objects: added, modified and removed
+ * @returns {array} array with three JSON objects: added, modified and removed. Returns empty array if no transactions were received.
  */
-export async function getTransactions () {
+export async function getTransactions (item_id) {
 
 	let hasMore = true;
 
@@ -37,35 +34,53 @@ export async function getTransactions () {
 	let balance;
 	let balanceJSON;
 
+	const access_token = getAccessToken(item_id);
+	let current_cursor = getCursor(item_id);
+
 	while(hasMore) {
 		const request = {
 			client_id: env.plaid.PLAID_CLIENT_ID, // Already exists in config
 			secret: env.plaid.PLAID_SECRET, // Already exists in config
-			access_token: env.plaid.PLAID_ACCESS_TOKEN,
+			access_token: access_token,
 			cursor: current_cursor
 		}
 
 		const response = await client.transactionsSync(request);
 		data = response.data;
-		account_id = data.accounts[0].account_id;
 
-		added = added.concat(data.added);
-		modified = modified.concat(data.modified);
-		removed = removed.concat(data.removed);
+		// If 
+		if(data.transactions_update_status == "HISTORICAL_UPDATE_COMPLETE") {
+			console.log("Transactions up to date");
+			current_cursor = data.next_cursor;
+				//Ensure account exists
+				addAccount(account_id);
+				// Save new cursor to DB
+				setCursor(account_id, current_cursor);
+				return [];
+		} else {
+			console.log("New transactions received");
+			if(data.accounts.length != 0) {
+				account_id = data.accounts[0].account_id;
+				balance = data.accounts[0].balances.available;	
+			};
 
-		balance = data.accounts[0].balances.available;
-		balanceJSON = {account_id, balance};
-		// TODO: Add in an update to "balance". Make sure balance has changed, so you don't repeat if not necessary. 
-		
-		current_cursor = data.next_cursor;
-		hasMore = data.has_more;
+			added = added.concat(data.added);
+			modified = modified.concat(data.modified);
+			removed = removed.concat(data.removed);
+			balanceJSON = {account_id, balance};
+
+			// TODO: Add in an update to "balance". Make sure balance has changed, so you don't repeat if not necessary. 
+			current_cursor = data.next_cursor;
+			hasMore = data.has_more;
+		};
 	}
 
+
 	//Ensure account exists
-	addAccount(account_id);
+	//addAccount(account_id);
 
 	// Save new cursor to DB
-	setCursor(account_id, current_cursor);
+	setCursor(item_id, current_cursor);
 
 	return [added, modified, removed, balanceJSON];
 };

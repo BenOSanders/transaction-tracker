@@ -25,9 +25,9 @@ CREATE TABLE IF NOT EXISTS transactions(
 );
 
 CREATE TABLE IF NOT EXISTS sync_state(
-    account_id TEXT PRIMARY KEY,
+    item_id TEXT PRIMARY KEY,
     cursor TEXT,
-    FOREIGN KEY (account_id) REFERENCES accounts(account_id)
+    FOREIGN KEY (item_id) REFERENCES items(item_id)
 );
 
 CREATE TABLE IF NOT EXISTS balance(
@@ -38,12 +38,22 @@ CREATE TABLE IF NOT EXISTS balance(
 
 CREATE TABLE IF NOT EXISTS accounts(
     account_id TEXT PRIMARY KEY,
+    item_id TEXT NOT NULL,
     name TEXT,
-    access_token TEXT
+    type TEXT,
+    FOREIGN KEY (item_id) REFERENCES items(item_id)
+);
+
+CREATE TABLE IF NOT EXISTS items (
+    item_id TEXT PRIMARY KEY,      -- Plaid Item ID
+    access_token TEXT NOT NULL,    -- Plaid access token
+    institution_name TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 `);
 
+db.prepare("PRAGMA foreign_keys = ON;").run();
 
 //db.prepare("INSERT OR IGNORE INTO sync_state (account_id, cursor) VALUES (NULL, NULL)").run();
 
