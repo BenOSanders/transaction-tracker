@@ -15,7 +15,7 @@ const prepCursor = db.prepare(`SELECT cursor FROM sync_state WHERE item_id = @it
  * @param {integer} account_id ID of account to retrieve cursor for
  */
 export const getCursor = (item_id) => {
-    return prepCursor.get({item_id}).cursor;
+    return prepCursor.get({item_id});
 };
 
 /**
@@ -177,12 +177,10 @@ export function updateBalance(account_id, balance) {
 //=================================ITEMS================================
 //======================================================================
 
-const selectAllItems = db.prepare(`
-    SELECT * FROM items;
-`);
+const selectAllItems = db.prepare(`SELECT * FROM items;`);
 
 export function getAllItems() {
-    return selectAllItems.run();
+    return selectAllItems.get();
 };
 
 const insertItem = db.prepare(`
@@ -200,5 +198,5 @@ const selectAccessToken = db.prepare(`
 `);
 
 export function getAccessToken(item_id) {
-    return selectAccessToken.run({item_id});
+    return selectAccessToken.get({item_id});
 };

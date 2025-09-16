@@ -12,8 +12,7 @@ const configuration = new Configuration({
 const client = new PlaidApi(configuration);
 
 
-// Get cursor from DB
-let current_cursor = getCursor(env.plaid.PLAID_ACCOUNT_ID);
+
 
 /**
  * Must retrieve transactions and return them as json, and update cursor
@@ -34,8 +33,9 @@ export async function getTransactions (item_id) {
 	let balance;
 	let balanceJSON;
 
-	const access_token = getAccessToken(item_id);
-	let current_cursor = getCursor(item_id);
+	const access_token = getAccessToken(item_id).access_token;
+	// Get cursor from DB
+	let current_cursor = getCursor(item_id).cursor;
 
 	while(hasMore) {
 		const request = {
@@ -43,7 +43,7 @@ export async function getTransactions (item_id) {
 			secret: env.plaid.PLAID_SECRET, // Already exists in config
 			access_token: access_token,
 			cursor: current_cursor
-		}
+		}		
 
 		const response = await client.transactionsSync(request);
 		data = response.data;
@@ -52,11 +52,27 @@ export async function getTransactions (item_id) {
 		if(data.transactions_update_status == "HISTORICAL_UPDATE_COMPLETE") {
 			console.log("Transactions up to date");
 			current_cursor = data.next_cursor;
-				//Ensure account exists
-				addAccount(account_id);
-				// Save new cursor to DB
-				setCursor(account_id, current_cursor);
-				return [];
+			//Ensure account exists
+			//addAccount(account_id);
+			// Save new cursor to DB
+			setCursor(account_id, current_cursor);
+			return [];
+		} else if (data.transactions_update_status == "TRANSACTIONS_UPDATE_STATUS_UNKNOWN") {
+			console.log("Transactions update status unknown");
+			current_cursor = data.next_cursor;
+			//Ensure account exists
+			//addAccount(account_id);
+			// Save new cursor to DB
+			setCursor(account_id, current_cursor);
+			return [];
+		} else if (data.transactions_update_status == "INITIAL_UPDATE_COMPLETE") {
+			console.log("Transactions initial update complete");
+			current_cursor = data.next_cursor;
+			//Ensure account exists
+			//addAccount(account_id);
+			// Save new cursor to DB
+			setCursor(account_id, current_cursor);
+			return [];
 		} else {
 			console.log("New transactions received");
 			if(data.accounts.length != 0) {

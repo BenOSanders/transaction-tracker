@@ -3,7 +3,7 @@ import { getTransactions } from '../services/plaidService.js';
 import { saveTransactions, removeTransactions, updateBalance, getAllItems } from '../services/dbService.js';
 
 export async function syncTransactions () {
-    let items = getAllItems();
+    let items = [].concat(getAllItems());
 
     items.forEach(async item => {
         let newTx = await getTransactions(item.item_id);
