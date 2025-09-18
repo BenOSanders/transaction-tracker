@@ -7,7 +7,7 @@ import { db } from '../config/db.js';
 /**
  * Cursor retrieval prepare statement
  */
-const prepCursor = db.prepare(`SELECT cursor FROM sync_state WHERE item_id = @item_id`);
+const selectCursor = db.prepare(`SELECT cursor FROM sync_state WHERE item_id = @item_id`);
 
 /**
  * Gets cursor before making request
@@ -15,14 +15,16 @@ const prepCursor = db.prepare(`SELECT cursor FROM sync_state WHERE item_id = @it
  * @param {integer} account_id ID of account to retrieve cursor for
  */
 export const getCursor = (item_id) => {
-    return prepCursor.get({item_id});
+    return selectCursor.get({item_id});
 };
 
 /**
  * Update or insert cursor prepare statement
  */
-const upsertCursor = db.prepare(`INSERT OR REPLACE INTO sync_state (item_id, cursor)
+const upsertCursor = db.prepare(`INSERT INTO sync_state (item_id, cursor)
     VALUES (@item_id, @cursor)
+    ON CONFLICT(item_id) DO UPDATE SET
+        cursor = excluded.cursor
 `);
 
 /**
@@ -31,8 +33,12 @@ const upsertCursor = db.prepare(`INSERT OR REPLACE INTO sync_state (item_id, cur
  * @param {*} item_id ID of item to set cursor for
  */
 export const setCursor = (item_id, cursor) => { 
-    if(cursor == getCursor(item_id, cursor)) {
+    if(cursor == getCursor(item_id)) {
         console.log("No cursor change.");
+        return 0;
+    }
+    if(item_id == undefined) {
+        console.log("setCursor Error: item id undefined");
         return 0;
     }
     console.log("Updating cursor");
@@ -83,6 +89,9 @@ const upsertTx = db.prepare(`
         state = excluded.state,
         zipcode = excluded.zipcode
 `);
+
+const selectTransactions = db.prepare(`SELECT * FROM transactions WHERE account_id = @account_id`);
+const selectTransactionsByDate = db.prepare(`SELECT * FROM transactions WHERE account_id = @account_id ORDER BY date ASC`);
 
 /**
  * Receives list of transacitons to add to or modify in the databse. Returns number of transactions added or modified.
@@ -143,8 +152,22 @@ export function removeTransactions(transactions) {
     console.log(`Successfully deleted ${deleted} transactions`);
 
     return deleted;
-}
+};
 
+
+export function getTransactions(item_id) {
+    if(item_id == undefined || item_id == null) {
+        console.log("getTransactions Error: item_id undefined or null");
+    };
+    return selectTransactions.get({item_id});
+};
+
+export function getTransactionsByDate(item_id) {
+    if(item_id == undefined || item_id == null) {
+        console.log("getTransactions Error: item_id undefined or null");
+    };
+    return selectTransactionsByDate.get({item_id});
+};
 
 //======================================================================
 //================================BALANCE===============================

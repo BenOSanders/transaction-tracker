@@ -12,8 +12,6 @@ const configuration = new Configuration({
 const client = new PlaidApi(configuration);
 
 
-
-
 /**
  * Must retrieve transactions and return them as json, and update cursor
  * 
@@ -21,6 +19,11 @@ const client = new PlaidApi(configuration);
  * @returns {array} array with three JSON objects: added, modified and removed. Returns empty array if no transactions were received.
  */
 export async function getTransactions (item_id) {
+
+	if(item_id == undefined || item_id == null) {
+		console.log("getTransactions Error: item_id is undefined or null");
+		return 0;
+	};
 
 	let hasMore = true;
 
@@ -55,7 +58,7 @@ export async function getTransactions (item_id) {
 			//Ensure account exists
 			//addAccount(account_id);
 			// Save new cursor to DB
-			setCursor(account_id, current_cursor);
+			setCursor(item_id, current_cursor);
 			return [];
 		} else if (data.transactions_update_status == "TRANSACTIONS_UPDATE_STATUS_UNKNOWN") {
 			console.log("Transactions update status unknown");
@@ -63,7 +66,7 @@ export async function getTransactions (item_id) {
 			//Ensure account exists
 			//addAccount(account_id);
 			// Save new cursor to DB
-			setCursor(account_id, current_cursor);
+			setCursor(item_id, current_cursor);
 			return [];
 		} else if (data.transactions_update_status == "INITIAL_UPDATE_COMPLETE") {
 			console.log("Transactions initial update complete");
@@ -71,7 +74,7 @@ export async function getTransactions (item_id) {
 			//Ensure account exists
 			//addAccount(account_id);
 			// Save new cursor to DB
-			setCursor(account_id, current_cursor);
+			setCursor(item_id, current_cursor);
 			return [];
 		} else {
 			console.log("New transactions received");
