@@ -37,8 +37,9 @@ export async function getTransactions (item_id) {
 	let balanceJSON;
 
 	const access_token = getAccessToken(item_id).access_token;
+
 	// Get cursor from DB
-	let current_cursor = getCursor(item_id).cursor;
+	let current_cursor = getCursor(item_id).cursor || null;
 
 	while(hasMore) {
 		const request = {
@@ -46,37 +47,30 @@ export async function getTransactions (item_id) {
 			secret: env.plaid.PLAID_SECRET, // Already exists in config
 			access_token: access_token,
 			cursor: current_cursor
-		}		
+		};
 
 		const response = await client.transactionsSync(request);
 		data = response.data;
 
 		// If 
-		if(data.transactions_update_status == "HISTORICAL_UPDATE_COMPLETE") {
+		if(data.transactions_update_status === "HISTORICAL_UPDATE_COMPLETE") {
 			console.log("Transactions up to date");
-			current_cursor = data.next_cursor;
-			//Ensure account exists
-			//addAccount(account_id);
-			// Save new cursor to DB
-			setCursor(item_id, current_cursor);
-			return [];
-		} else if (data.transactions_update_status == "TRANSACTIONS_UPDATE_STATUS_UNKNOWN") {
+		};
+		if (data.transactions_update_status === "TRANSACTIONS_UPDATE_STATUS_UNKNOWN") {
 			console.log("Transactions update status unknown");
+		};
+		if (data.transactions_update_status === "INITIAL_UPDATE_COMPLETE") {
+			console.log("Transactions initial update complete. Updating cursor and exiting.");
+			//console.log(`Current cursor: ${current_cursor}`);
+			//console.log(`New cursor: ${data.next_cursor}`);
 			current_cursor = data.next_cursor;
 			//Ensure account exists
 			//addAccount(account_id);
 			// Save new cursor to DB
 			setCursor(item_id, current_cursor);
 			return [];
-		} else if (data.transactions_update_status == "INITIAL_UPDATE_COMPLETE") {
-			console.log("Transactions initial update complete");
-			current_cursor = data.next_cursor;
-			//Ensure account exists
-			//addAccount(account_id);
-			// Save new cursor to DB
-			setCursor(item_id, current_cursor);
-			return [];
-		} else {
+		};
+		if(data.accounts.length > 0 && data.accounts[0].length != 0) {
 			console.log("New transactions received");
 			if(data.accounts.length != 0) {
 				account_id = data.accounts[0].account_id;
@@ -91,8 +85,17 @@ export async function getTransactions (item_id) {
 			// TODO: Add in an update to "balance". Make sure balance has changed, so you don't repeat if not necessary. 
 			current_cursor = data.next_cursor;
 			hasMore = data.has_more;
-		};
-	}
+		} else {
+			console.log("No new transactions received.");
+			current_cursor = data.next_cursor;
+			hasMore = data.has_more;
+			if(data.accounts.length != 0) {
+				account_id = data.accounts[0].account_id;
+				balance = data.accounts[0].balances.available;	
+				balanceJSON = {account_id, balance};
+			};
+		}
+	};
 
 
 	//Ensure account exists

@@ -102,10 +102,14 @@ const selectTransactionsByDate = db.prepare(`SELECT * FROM transactions WHERE ac
 export function saveTransactions(transactions) {
     let upserted = 0;
 
-    if(Object.keys(transactions).length === 0) {
-        console.log("Transactions empty.")
-        return 0
+    if(transactions != null && Object.keys(transactions).length === 0) {
+        console.log("Transactions empty.");
+        return 0;
     };
+    if(transactions.length === 0) {
+        console.log("Transactions empty");
+        return 0;
+    }
 
     transactions.forEach(tx => {
         upsertTx.run({
@@ -135,13 +139,10 @@ export function saveTransactions(transactions) {
     return upserted;
 };
 
+
 export function removeTransactions(transactions) {
     const deleted = 0;
-
-    if(Object.keys(transactions).length === 0) {
-        return 0
-    };
-
+    
     transactions.data.forEach(tx => {
         removeTx.run({
             transaction_id: tx.transaction_id
@@ -225,3 +226,19 @@ const selectAccessToken = db.prepare(`
 export function getAccessToken(item_id) {
     return selectAccessToken.get({item_id});
 };
+
+
+//======================================================================
+//=================================MISC=================================
+//======================================================================
+
+
+// Select a pay period
+/**
+ * 
+ * SELECT * FROM transactions
+ * WHERE transaction date is on or after an instance of "Income", 
+ * 
+ * I could also set a "Current pay period" and add that to eeach transaction, incrementing that any time a new Income trnansaction occures
+ */
+
