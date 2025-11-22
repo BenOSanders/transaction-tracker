@@ -19,7 +19,6 @@ const client = new PlaidApi(configuration);
  * @returns {array} array with three JSON objects: added, modified and removed. Returns empty array if no transactions were received.
  */
 export async function getTransactions (item_id) {
-
 	if(item_id == undefined || item_id == null) {
 		console.log("getTransactions Error: item_id is undefined or null");
 		return 0;
@@ -27,19 +26,23 @@ export async function getTransactions (item_id) {
 
 	let hasMore = true;
 
+	// TO REMOVE
 	let added = [];
 	let modified = [];
 	let removed = [];
+	let balance = []
+	// TO REMOVE
 
 	let data;
-	let account_id;
-	let balance;
-	let balanceJSON;
 
+	// Get access token from DB
 	const access_token = getAccessToken(item_id).access_token;
 
 	// Get cursor from DB
 	let current_cursor = getCursor(item_id).cursor || null;
+	if(current_cursor == null) {
+		console.log("Log: Cursor is null.");
+	}
 
 	while(hasMore) {
 		const request = {
@@ -52,49 +55,26 @@ export async function getTransactions (item_id) {
 		const response = await client.transactionsSync(request);
 		data = response.data;
 
-		// If 
-		if(data.transactions_update_status === "HISTORICAL_UPDATE_COMPLETE") {
-			console.log("Transactions up to date");
-		};
-		if (data.transactions_update_status === "TRANSACTIONS_UPDATE_STATUS_UNKNOWN") {
-			console.log("Transactions update status unknown");
-		};
-		if (data.transactions_update_status === "INITIAL_UPDATE_COMPLETE") {
-			console.log("Transactions initial update complete. Updating cursor and exiting.");
-			//console.log(`Current cursor: ${current_cursor}`);
-			//console.log(`New cursor: ${data.next_cursor}`);
-			current_cursor = data.next_cursor;
-			//Ensure account exists
-			//addAccount(account_id);
-			// Save new cursor to DB
-			setCursor(item_id, current_cursor);
-			return [];
-		};
-		if(data.accounts.length > 0 && data.accounts[0].length != 0) {
-			console.log("New transactions received");
-			if(data.accounts.length != 0) {
-				account_id = data.accounts[0].account_id;
-				balance = data.accounts[0].balances.available;	
-			};
+		// four arrays: added, modified, removed and accounts
+		added.push(...data.added);
+		modified.push(...data.modified);
+		removed.push(...data.removed);
 
-			added = added.concat(data.added);
-			modified = modified.concat(data.modified);
-			removed = removed.concat(data.removed);
-			balanceJSON = {account_id, balance};
-
-			// TODO: Add in an update to "balance". Make sure balance has changed, so you don't repeat if not necessary. 
-			current_cursor = data.next_cursor;
-			hasMore = data.has_more;
-		} else {
-			console.log("No new transactions received.");
-			current_cursor = data.next_cursor;
-			hasMore = data.has_more;
-			if(data.accounts.length != 0) {
-				account_id = data.accounts[0].account_id;
-				balance = data.accounts[0].balances.available;	
-				balanceJSON = {account_id, balance};
-			};
+		//available
+		// loop accounts
+		if(balance.length === 0 ){
+			balance = data.accounts.map(a => ({
+				account_id: a.account_id,
+				current: a.balances.current,
+				available: a.balances.available
+			}));
 		}
+
+		// todo: store the request id
+
+
+		current_cursor = data.next_cursor;
+		hasMore = data.has_more;
 	};
 
 
@@ -104,6 +84,11 @@ export async function getTransactions (item_id) {
 	// Save new cursor to DB
 	setCursor(item_id, current_cursor);
 
-	return [added, modified, removed, balanceJSON];
+	return {
+		newTx: added, 
+		modifiedTx: modified, 
+		removedTx: removed, 
+		balanceData: balance
+	};
 };
 

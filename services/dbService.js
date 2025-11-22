@@ -33,6 +33,7 @@ const upsertCursor = db.prepare(`INSERT INTO sync_state (item_id, cursor)
  * @param {*} item_id ID of item to set cursor for
  */
 export const setCursor = (item_id, cursor) => { 
+    console.log("==Log== {Location: dbService} Saving cursor");
     if(cursor == getCursor(item_id)) {
         console.log("No cursor change.");
         return 0;
@@ -141,9 +142,18 @@ export function saveTransactions(transactions) {
 
 
 export function removeTransactions(transactions) {
+    if(transactions != null && Object.keys(transactions).length === 0) {
+        console.log("Transactions empty.");
+        return 0;
+    };
+    if(transactions.length === 0) {
+        console.log("Transactions empty");
+        return 0;
+    }
+    
     const deleted = 0;
     
-    transactions.data.forEach(tx => {
+    transactions.forEach(tx => {
         removeTx.run({
             transaction_id: tx.transaction_id
         });

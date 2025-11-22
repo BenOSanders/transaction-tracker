@@ -27,6 +27,8 @@ const period_encoding = {
     23: "dec-h2"
 }
 
+
+
 // For a given item_id, loop through all transactions and place them in a "pay period"
 // A pay period is the time between paychecks. Since paychecks do not arrive on the same day each month, 
 // // dynamic pay periods must be set.
